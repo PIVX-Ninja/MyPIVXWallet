@@ -51,13 +51,12 @@
         "BIP44_TYPE_LEDGER": 1,
         "PROTOCOL_VERSION": 70927,
         "MASTERNODE_PORT": 51474,
-        "SHIELD_PREFIX": "ptestsapling",
+        "SHIELD_PREFIX": "pts",
         "Explorers": [
-            { "name": "rockdev", "url": "https://testnet.rockdev.org" },
-            { "name": "duddino", "url": "https://testnet.duddino.com" }
+            { "name": "PIVX-Ninja", "url": "https://explorer.testnet.pivx.ninja" }
         ],
         "Nodes": [
-            { "name": "Duddino", "url": "https://rpc2.duddino.com/testnet" }
+            { "name": "PIVX-Ninja", "url": "https://rpc.pivx.ninja/testnet" }
         ],
         "Consensus": {},
         "coinbaseMaturity": 15,
@@ -66,9 +65,9 @@
         "proposalFeeConfirmRequirement": 3,
         "maxPaymentCycles": 20,
         "maxPayment": 144000000000,
-        "defaultColdStakingAddress": "WmNziUEPyhnUkiVdfsiNX93H6rSJnios44",
+        "defaultColdStakingAddress": "WiuLpcj8bker7PftrKUaMzaW9oJgcmKp8w",
         "stakeSplitTarget": 50000000000,
         "mnReward": 600000000,
-        "defaultStartingShieldBlock": 1503537
+        "defaultStartingShieldBlock": 201
     }
 }

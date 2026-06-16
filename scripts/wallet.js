@@ -1141,7 +1141,7 @@ export class Wallet {
 
     async #resetShield() {
         // TODO: take the wallet creation height in input from users
-        await this.#shield.reloadFromCheckpoint(4_200_000);
+        await this.#shield.reloadFromCheckpoint(cChainParams.current.name === 'mainnet' ? 4_200_000 : 201);
         await this.#saveShieldOnDisk();
     }
 

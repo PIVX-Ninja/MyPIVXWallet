@@ -362,8 +362,7 @@ export class RPCNodeNetwork extends Network {
         // the main domain.
         // e.g.: Not rpc.duddino.com, but duddino.com/sapling-output.params
         return this.strUrl
-            .replace('rpc.', '')
-            .replace('rpc2.', '')
+            .replace('/testnet', '')
             .replace('/mainnet', '');
     }
 
