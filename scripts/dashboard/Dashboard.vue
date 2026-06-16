@@ -113,7 +113,7 @@ async function importWallet({
     secret,
     password = '',
     label,
-    blockCount = 4_200_000,
+    blockCount = cChainParams.current.name === 'mainnet' ? 4_200_000 : 201,
 }) {
     try {
         /**
