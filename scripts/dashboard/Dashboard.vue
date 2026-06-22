@@ -87,6 +87,7 @@ const showEncryptModal = ref(false);
 const keyToBackup = ref('');
 const transferAddress = ref('');
 const transferDescription = ref('');
+const transferMemo = ref('');
 const transferAmount = ref('');
 const showRestoreWallet = ref(false);
 const restoreWalletReason = ref('');
@@ -388,6 +389,7 @@ async function send(address, amount, useShieldInputs, memo) {
     showTransferMenu.value = false;
     transferAddress.value = '';
     transferDescription.value = '';
+    transferMemo.value = '';
     transferAmount.value = '';
 
     // Create and send the TX
@@ -483,6 +485,7 @@ onMounted(async () => {
         } else if (urlParams.has('pay')) {
             transferAddress.value = urlParams.get('pay') ?? '';
             transferDescription.value = urlParams.get('desc') ?? '';
+            transferMemo.value = urlParams.get('memo') ?? '';
             transferAmount.value = parseFloat(urlParams.get('amount')) || '';
             showTransferMenu.value = true;
         }
@@ -527,6 +530,7 @@ async function openSendQRScanner() {
         if (cBIP21Req) {
             transferAddress.value = cBIP21Req.address;
             transferDescription.value = cBIP21Req.options?.label ?? '';
+            transferMemo.value = cBIP21Req.options?.memo ?? '';
             transferAmount.value = cBIP21Req.options?.amount ?? 0;
             showTransferMenu.value = true;
             return;
@@ -1093,6 +1097,7 @@ defineExpose({
                 :currency="currency"
                 v-model:amount="transferAmount"
                 :desc="transferDescription"
+                :memo="transferMemo"
                 v-model:address="transferAddress"
                 @openQrScan="openSendQRScanner()"
                 @close="showTransferMenu = false"
