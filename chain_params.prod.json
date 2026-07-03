@@ -24,6 +24,22 @@
             { "name": "PIVX Labs", "url": "https://rpc.pivxla.bz/mainnet" },
             { "name": "Duddino", "url": "https://rpc.duddino.com/mainnet" }
         ],
+        "NameResolvers": [
+            { "name": "PIVX.name Indexer (HTTPS)", "url": "https://indexer.pivx.name" },
+            { "name": "PIVX.name Indexer (HTTP)", "url": "http://indexer.pivx.name" }
+        ],
+        "EVMNetworks": [
+            {
+                "name": "Arbitrum One",
+                "chainId": 42161,
+                "contractAddress": "0x0000000000000000000000000000000000000000",
+                "rpcs": [
+                    "https://arb1.arbitrum.io/rpc",
+                    "https://1rpc.io/arb",
+                    "https://arbitrum.llamarpc.com"
+                ]
+            }
+        ],
         "Consensus": {},
         "coinbaseMaturity": 100,
         "budgetCycleBlocks": 43200,
@@ -57,6 +73,20 @@
         ],
         "Nodes": [
             { "name": "PIVX-Ninja", "url": "https://rpc.pivx.ninja/testnet" }
+        ],
+        "NameResolvers": [
+            { "name": "PIVX.name Indexer (HTTPS)", "url": "https://indexer.pivx.name" },
+            { "name": "PIVX.name Indexer (HTTP)", "url": "http://indexer.pivx.name" }
+        ],
+        "EVMNetworks": [
+            {
+                "name": "Arbitrum Sepolia",
+                "chainId": 421614,
+                "contractAddress": "0x237534d7e4c7fa21651befd770d76525c78194c3",
+                "rpcs": [
+                    "https://sepolia-rollup.arbitrum.io/rpc"
+                ]
+            }
         ],
         "Consensus": {},
         "coinbaseMaturity": 15,
