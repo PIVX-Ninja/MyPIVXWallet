@@ -319,7 +319,7 @@ async function send(address, amount, useShieldInputs, memo) {
     // Check if the recipient is a domain name with one of the supported TLDs
     if (isPIVXNameTLD(address)) {
         if (!isPIVXName(address)) {
-            return createAlert('warning', `Invalid domain name format. Label must be 1-64 characters, lowercase alphanumeric + hyphens (no leading, trailing, or consecutive), ending with one of: ${PIVXNameTLDs.join(', ')}`, 5000);
+            return createAlert('warning', tr(ALERTS.PINS_INVALID_FORMAT, [{ tlds: PIVXNameTLDs.join(', ') }]), 5000);
         }
         pinsRef.value.resolveAndVerify(address, amount, useShieldInputs, memo);
         return;

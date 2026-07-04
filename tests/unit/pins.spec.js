@@ -1,5 +1,59 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { verifySmtProof, fetchArbitrumRoot, fetchIndexerRoot, verifyRootValidityOnContract, isPIVXName, isPIVXNameTLD, PIVXNameTLDs } from '../../scripts/utils.pins.js';
+import { mount } from '@vue/test-utils';
+import PiNS from '../../scripts/dashboard/PiNS.vue';
+import { Database } from '../../scripts/database.js';
+
+vi.mock('../../scripts/i18n.js', () => {
+    const translation = {
+        pinsPolling: 'Polling...',
+        pinsTitleSecurityWarning: 'Security Warning',
+        pinsTextSecurityWarning: 'The Name Service indexer returned a state root that has never been registered on the blockchain.',
+        pinsTitleSynced: 'Synced',
+        pinsTextSynced: 'Synced success.',
+        pinsTitleNotFound: 'Not Found',
+        pinsTextNotFound: 'Not found.',
+        pinsTitleSyncDelay: 'Sync Delay',
+        pinsTextSyncDelayResolved: 'Sync delay.',
+        pinsTitleSyncDelayNotFound: 'Sync Delay Not Found',
+        pinsTextSyncDelayNotFound: 'Sync delay not found.',
+        pinsTitleIndexerError: 'Indexer Error',
+        pinsTextIndexerError: 'Error: {errMsg}',
+        pinsBtnClose: 'Close',
+        pinsBtnSend: 'Send',
+        pinsBtnSendAnyway: 'Send anyway',
+        pinsBtnCancel: 'Cancel',
+        pinsBtnRetry: 'Retry'
+    };
+    const ALERTS = {
+        PINS_RESOLVING_DOMAIN: 'Resolving {strDomain}...',
+        PINS_CHECKING_SYNC: 'Checking sync...',
+        PINS_SYNCING_WAIT: 'Syncing...',
+        PINS_SYNC_FAILED: 'Sync failed: {errMsg}',
+        PINS_RESOLVE_FAILED: 'Resolve failed: {errMsg}',
+        PINS_INVALID_FORMAT: 'Invalid format',
+        PINS_INCOMPLETE_METADATA: 'Incomplete metadata',
+        PINS_INVALID_PROOF: 'Invalid proof',
+        PINS_INVALID_SHIELD: 'Invalid shield',
+        PINS_NAME_MISMATCH: 'Name mismatch',
+        PINS_NOT_FOUND: 'Not found'
+    };
+    return {
+        translation,
+        ALERTS,
+        tr: (message, variables) => {
+            if (!message) return '';
+            variables.forEach((element) => {
+                message = message.replaceAll(
+                    '{' + Object.keys(element)[0] + '}',
+                    Object.values(element)[0]
+                );
+            });
+            return message;
+        },
+        switchTranslation: vi.fn()
+    };
+});
 
 describe('verifySmtProof', () => {
     it('should cryptographically verify the Sparse Merkle Tree (SMT) proof of a resolved name', () => {
@@ -593,3 +647,91 @@ describe('EVM and Indexer Root Checking', () => {
         expect(isValid).toBe(false);
     });
 });
+
+describe('PiNS.vue Component', () => {
+    beforeEach(async () => {
+        vi.useFakeTimers();
+        vi.stubGlobal('fetch', vi.fn());
+        vi.spyOn(Database, 'getInstance').mockResolvedValue({
+            getSettings: async () => ({
+                nameResolvingApi: 'https://indexer.pivx.name',
+                evmRpc: 'https://evm-rpc.pivx.name',
+                evmContractAddress: '0xcontract'
+            })
+        });
+    });
+
+
+    afterEach(() => {
+        vi.restoreAllMocks();
+        vi.unstubAllGlobals();
+        vi.useRealTimers();
+    });
+
+    it('should stop polling and show security warning modal if indexer root becomes invalid during domain not found sync polling', async () => {
+        // Mock fetch calls
+        // 1. resolve call for getPivxNameRoots
+        const resolveResponse = {
+            error: { error_message: 'Domain not found' }
+        };
+        // 2. fetchArbitrumRoot call (currentRoot)
+        const evmRootResponse = {
+            result: '0x1111000000000000000000000000000000000000000000000000000000000000'
+        };
+        // 3. fetchIndexerRoot call (v1.0/info) - initial valid root
+        const indexerRootResponse1 = {
+            response: {
+                indexer_smt_root: '2222000000000000000000000000000000000000000000000000000000000000'
+            }
+        };
+        // 4. verifyRootValidityOnContract call (rootHistory for 2222...) - returns block height > 0 (valid)
+        const verifyRootResponse1 = {
+            result: '0x0000000000000000000000000000000000000000000000000000000000039447'
+        };
+
+        // We set up fetch mocks in sequence
+        fetch
+            // Initial call sequence in resolveAndVerify
+            .mockResolvedValueOnce({ ok: true, json: async () => resolveResponse }) // resolve
+            .mockResolvedValueOnce({ ok: true, json: async () => evmRootResponse }) // currentRoot
+            .mockResolvedValueOnce({ ok: true, json: async () => indexerRootResponse1 }) // info
+            .mockResolvedValueOnce({ ok: true, json: async () => verifyRootResponse1 }); // rootHistory
+
+        const wrapper = mount(PiNS);
+        
+        // Trigger initial resolution
+        await wrapper.vm.resolveAndVerify('notfound.pivx', 10, true, '');
+
+        // Verify initial state: polling should be active and modal should be in 'not_found' sync delay state
+        expect(wrapper.vm.showSyncModal).toBe(true);
+        expect(wrapper.vm.syncModalState).toBe('not_found');
+        expect(wrapper.vm.syncModalIsPolling).toBe(true);
+
+        // Now setup fetch mock for the next polling interval tick:
+        // indexer returns a wrong invalid root (e.g. 9999...)
+        const indexerRootResponse2 = {
+            response: {
+                indexer_smt_root: '9999000000000000000000000000000000000000000000000000000000000000'
+            }
+        };
+        // verifyRootValidityOnContract for 9999... returns block height 0 (invalid)
+        const verifyRootResponse2 = {
+            result: '0x0000000000000000000000000000000000000000000000000000000000000000'
+        };
+
+        fetch
+            .mockResolvedValueOnce({ ok: true, json: async () => resolveResponse }) // resolve
+            .mockResolvedValueOnce({ ok: true, json: async () => evmRootResponse }) // currentRoot
+            .mockResolvedValueOnce({ ok: true, json: async () => indexerRootResponse2 }) // info
+            .mockResolvedValueOnce({ ok: true, json: async () => verifyRootResponse2 }); // rootHistory
+
+        // Advance timers by 5 seconds to trigger one interval tick
+        await vi.advanceTimersByTimeAsync(5000);
+
+        // Verify that the polling has stopped and the modal transitions to the security warning 'invalid_root'
+        expect(wrapper.vm.syncModalIsPolling).toBe(false);
+        expect(wrapper.vm.syncModalState).toBe('invalid_root');
+        expect(wrapper.vm.showSyncModal).toBe(true);
+    });
+});
+

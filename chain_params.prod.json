@@ -25,8 +25,7 @@
             { "name": "Duddino", "url": "https://rpc.duddino.com/mainnet" }
         ],
         "NameResolvers": [
-            { "name": "PIVX.name Indexer (HTTPS)", "url": "https://indexer.pivx.name" },
-            { "name": "PIVX.name Indexer (HTTP)", "url": "http://indexer.pivx.name" }
+            { "name": "PIVX.name Indexer", "url": "https://indexer.pivx.name" }
         ],
         "EVMNetworks": [
             {
@@ -75,8 +74,7 @@
             { "name": "PIVX-Ninja", "url": "https://rpc.pivx.ninja/testnet" }
         ],
         "NameResolvers": [
-            { "name": "PIVX.name Indexer (HTTPS)", "url": "https://indexer.pivx.name" },
-            { "name": "PIVX.name Indexer (HTTP)", "url": "http://indexer.pivx.name" }
+            { "name": "PIVX.name Indexer", "url": "https://indexer.pivx.name" }
         ],
         "EVMNetworks": [
             {

@@ -9,6 +9,7 @@ import {
     verifyRootValidityOnContract,
     verifySmtProof
 } from '../utils.pins.js';
+import { ALERTS, translation, tr } from '../i18n.js';
 
 // Events we can emit
 const emit = defineEmits(['send']);
@@ -16,10 +17,10 @@ const emit = defineEmits(['send']);
 // Reactive States
 const showSyncModal = ref(false);
 const syncModalState = ref('warning');
-const syncModalTitle = ref('⚠️ Indexer Sync Delay');
+const syncModalTitle = ref('');
 const syncModalText = ref('');
-const syncModalConfirmText = ref('Send anyway');
-const syncModalCancelText = ref('Cancel');
+const syncModalConfirmText = ref('');
+const syncModalCancelText = ref('');
 const syncModalIsPolling = ref(false);
 const pendingSendParams = ref(null);
 
@@ -85,7 +86,7 @@ async function getPivxNameRoots(apiEndpoint, strDomain, evmRpc, evmContractAddre
         indexerRoot = await fetchIndexerRoot(apiEndpoint);
     }
 
-    const rootsMatch = evmRoot.toLowerCase() === indexerRoot.toLowerCase();
+    const rootsMatch = !!evmRoot && !!indexerRoot && evmRoot.toLowerCase() === indexerRoot.toLowerCase();
 
     return { rootsMatch, evmRoot, indexerRoot, isNotFound, resolveData };
 }
@@ -100,26 +101,64 @@ function verifyResolvedDetails(strDomain, resolveData) {
     const merkleProof = resolveData.merkle_proof;
 
     if (!resolvedAddress || !ownerPubkey || price === undefined || nonce === undefined || !merkleProof || !smtRoot) {
-        createAlert('warning', `Domain name ${strDomain} response metadata is incomplete or invalid.`, 5000);
+        createAlert('warning', tr(ALERTS.PINS_INCOMPLETE_METADATA, [{ strDomain }]), 5000);
         return false;
     }
 
     if (!verifySmtProof(strDomain, resolvedAddress, ownerPubkey, price, nonce, merkleProof, smtRoot)) {
-        createAlert('warning', `Cryptographic verification of the name resolution failed: Merkle proof is invalid.`, 5000);
+        createAlert('warning', ALERTS.PINS_INVALID_PROOF, 5000);
         return false;
     }
 
     if (!isShieldAddress(resolvedAddress)) {
-        createAlert('warning', `Resolved address is not a valid shield address.`, 5000);
+        createAlert('warning', ALERTS.PINS_INVALID_SHIELD, 5000);
         return false;
     }
 
     if (resolveData.domain_name !== strDomain) {
-        createAlert('warning', `Resolved name does not match requested name.`, 5000);
+        createAlert('warning', ALERTS.PINS_NAME_MISMATCH, 5000);
         return false;
     }
 
     return true;
+}
+
+async function verifyAndHandleRootValidity(evmRpc, evmContractAddress, indexerRoot) {
+    const isRootValid = await verifyRootValidityOnContract(evmRpc, evmContractAddress, indexerRoot);
+    if (!isRootValid) {
+        stopSyncModalPolling();
+        pendingSendParams.value = null; // Clear to prevent any send
+        showSyncModal.value = true;
+        syncModalState.value = 'invalid_root';
+        syncModalTitle.value = translation.pinsTitleSecurityWarning;
+        syncModalText.value = translation.pinsTextSecurityWarning;
+        syncModalCancelText.value = translation.pinsBtnClose;
+        return false;
+    }
+    return true;
+}
+
+function handleCriticalError(e, isRetry = false) {
+    const errMsg = e.message || String(e);
+    const isNetworkError = errMsg.toLowerCase().includes('fetch') || 
+                           errMsg.toLowerCase().includes('networkerror') || 
+                           errMsg.toLowerCase().includes('timeout') || 
+                           errMsg.toLowerCase().includes('conn');
+    if (!isNetworkError) {
+        stopSyncModalPolling();
+        pendingSendParams.value = null;
+        showSyncModal.value = true;
+        syncModalState.value = 'invalid_root';
+        syncModalTitle.value = translation.pinsTitleIndexerError;
+        syncModalText.value = tr(translation.pinsTextIndexerError, [{ errMsg }]);
+        syncModalCancelText.value = translation.pinsBtnClose;
+        return true;
+    }
+    
+    if (isRetry) {
+        createAlert('warning', tr(ALERTS.PINS_SYNC_FAILED, [{ errMsg }]), 3000);
+    }
+    return false;
 }
 
 function startSyncModalPolling(apiEndpoint, strDomain, evmRpc, evmContractAddress) {
@@ -128,8 +167,13 @@ function startSyncModalPolling(apiEndpoint, strDomain, evmRpc, evmContractAddres
     
     syncModalInterval = setInterval(async () => {
         try {
-            const { rootsMatch, isNotFound, resolveData } = await getPivxNameRoots(apiEndpoint, strDomain, evmRpc, evmContractAddress);
-            
+            const { rootsMatch, indexerRoot, isNotFound, resolveData } = await getPivxNameRoots(apiEndpoint, strDomain, evmRpc, evmContractAddress);
+
+            // SECURITY CHECK: Verify if the indexer's root exists historically on the contract
+            const isRootValid = await verifyAndHandleRootValidity(evmRpc, evmContractAddress, indexerRoot);
+            if (!isRootValid) return;
+
+
             if (rootsMatch) {
                 stopSyncModalPolling();
                 
@@ -139,17 +183,18 @@ function startSyncModalPolling(apiEndpoint, strDomain, evmRpc, evmContractAddres
                         pendingSendParams.value.resolveData = resolveData;
                     }
                     syncModalState.value = 'synced';
-                    syncModalTitle.value = '✓ Synced & Resolved';
-                    syncModalText.value = "The indexer is synced, ready and the name has been successfully resolved. You are safe to send your funds.";
-                    syncModalConfirmText.value = 'Send';
+                    syncModalTitle.value = translation.pinsTitleSynced;
+                    syncModalText.value = translation.pinsTextSynced;
+                    syncModalConfirmText.value = translation.pinsBtnSend;
                 } else {
                     syncModalState.value = 'not_found_synced_error';
-                    syncModalTitle.value = '❌ Domain Not Found';
-                    syncModalText.value = "This domain name does not exist. Please check the spelling.";
+                    syncModalTitle.value = translation.pinsTitleNotFound;
+                    syncModalText.value = translation.pinsTextNotFound;
                 }
             }
         } catch (e) {
             console.error("Sync modal background check error:", e);
+            handleCriticalError(e);
         }
     }, 5000);
 }
@@ -187,10 +232,17 @@ async function retrySyncModalResolution() {
     
     stopSyncModalPolling();
     
-    const checkingAlert = createAlert('info', `Checking sync status...`, 5000);
+    const checkingAlert = createAlert('info', translation.pinsCheckingSync, 5000);
     try {
-        const { rootsMatch, isNotFound, resolveData } = await getPivxNameRoots(apiEndpoint, pendingSendParams.value.originalDomain, evmRpc, evmContractAddress);
+        const { rootsMatch, indexerRoot, isNotFound, resolveData } = await getPivxNameRoots(apiEndpoint, pendingSendParams.value.originalDomain, evmRpc, evmContractAddress);
         
+        // SECURITY CHECK: Verify if the indexer's root exists historically on the contract
+        const isRootValid = await verifyAndHandleRootValidity(evmRpc, evmContractAddress, indexerRoot);
+        if (!isRootValid) {
+            if (checkingAlert) checkingAlert.close();
+            return;
+        }
+
         if (checkingAlert) checkingAlert.close();
         if (rootsMatch) {
             stopSyncModalPolling();
@@ -206,21 +258,21 @@ async function retrySyncModalResolution() {
                 }
             } else {
                 showSyncModal.value = false;
-                createAlert('warning', `Domain name ${pendingSendParams.value.originalDomain} could not be resolved.`, 5000);
+                createAlert('warning', tr(ALERTS.PINS_NOT_FOUND, [{ strDomain: pendingSendParams.value.originalDomain }]), 5000);
             }
         } else {
-            createAlert('warning', 'Indexer is still syncing, please wait...', 3000);
+            createAlert('warning', translation.pinsSyncingWait, 3000);
             startSyncModalPolling(apiEndpoint, pendingSendParams.value.originalDomain, evmRpc, evmContractAddress);
         }
     } catch (e) {
         if (checkingAlert) checkingAlert.close();
-        createAlert('warning', `Failed to check sync status: ${e.message || e}`, 3000);
+        handleCriticalError(e, true);
     }
 }
 
 async function resolveAndVerify(domain, amount, useShieldInputs, memo) {
     const strDomain = domain.toLowerCase();
-    const resolvingAlert = createAlert('info', `Resolving domain name ${strDomain}...`, 10000);
+    const resolvingAlert = createAlert('info', tr(ALERTS.PINS_RESOLVING_DOMAIN, [{ strDomain }]), 10000);
     
     try {
         const database = await Database.getInstance();
@@ -234,16 +286,8 @@ async function resolveAndVerify(domain, amount, useShieldInputs, memo) {
 
         if (!rootsMatch) {
             // Verify if the indexer's root exists historically on the contract
-            const isRootValid = await verifyRootValidityOnContract(evmRpc, evmContractAddress, indexerRoot);
-            if (!isRootValid) {
-                pendingSendParams.value = null; // Clear to prevent any send
-                showSyncModal.value = true;
-                syncModalState.value = 'invalid_root';
-                syncModalTitle.value = '⚠️ Security Warning';
-                syncModalText.value = "The Name Service indexer returned a state root that has never been registered on the blockchain. Sending funds is blocked for security reasons.";
-                syncModalCancelText.value = 'Close';
-                return;
-            }
+            const isRootValid = await verifyAndHandleRootValidity(evmRpc, evmContractAddress, indexerRoot);
+            if (!isRootValid) return;
 
             // Roots mismatch! Keep send params for resumption
             pendingSendParams.value = {
@@ -259,19 +303,19 @@ async function resolveAndVerify(domain, amount, useShieldInputs, memo) {
                 // State A: Domain Resolved (Roots Mismatch)
                 showSyncModal.value = true;
                 syncModalState.value = 'warning';
-                syncModalTitle.value = '⚠️ Indexer Sync Delay';
-                syncModalText.value = "The Name Service is currently syncing with the latest state from PIVX blockchain. If the owner changed this domain's target address in the last 10-20 minutes, funds might go to the old address.";
-                syncModalConfirmText.value = 'Send anyway';
-                syncModalCancelText.value = 'Cancel';
+                syncModalTitle.value = translation.pinsTitleSyncDelay;
+                syncModalText.value = translation.pinsTextSyncDelayResolved;
+                syncModalConfirmText.value = translation.pinsBtnSendAnyway;
+                syncModalCancelText.value = translation.pinsBtnCancel;
                 
                 startSyncModalPolling(apiEndpoint, strDomain, evmRpc, evmContractAddress);
             } else {
                 // State B: Domain Not Found (Roots Mismatch)
                 showSyncModal.value = true;
                 syncModalState.value = 'not_found';
-                syncModalTitle.value = '🔍 Indexer Sync Delay';
-                syncModalText.value = "The Name Service is currently syncing with the latest state from PIVX blockchain, and this domain name was not found. If it was registered very recently, it might be syncing at the moment.";
-                syncModalCancelText.value = 'Cancel';
+                syncModalTitle.value = translation.pinsTitleSyncDelayNotFound;
+                syncModalText.value = translation.pinsTextSyncDelayNotFound;
+                syncModalCancelText.value = translation.pinsBtnCancel;
                 
                 startSyncModalPolling(apiEndpoint, strDomain, evmRpc, evmContractAddress);
             }
@@ -280,7 +324,7 @@ async function resolveAndVerify(domain, amount, useShieldInputs, memo) {
 
         // Roots matched! Check if resolved target was found
         if (isNotFound || !resolveData || !resolveData.target_address) {
-            return createAlert('warning', `Domain name ${strDomain} could not be resolved.`, 5000);
+            return createAlert('warning', tr(ALERTS.PINS_NOT_FOUND, [{ strDomain }]), 5000);
         }
 
         // Run cryptographic verification before sending!
@@ -296,7 +340,7 @@ async function resolveAndVerify(domain, amount, useShieldInputs, memo) {
     } catch (e) {
         if (resolvingAlert) resolvingAlert.close();
         console.error("Name service resolution error:", e);
-        createAlert('warning', `Failed to resolve domain name: ${e.message || e}`, 5000);
+        createAlert('warning', tr(ALERTS.PINS_RESOLVE_FAILED, [{ errMsg: e.message || e }]), 5000);
     }
 }
 
@@ -326,7 +370,7 @@ defineExpose({
                     <p>{{ syncModalText }}</p>
                     <div v-if="syncModalIsPolling" class="mt-3 d-flex align-items-center justify-content-center" style="color: #d5adff; font-size: 0.85rem; gap: 8px;">
                         <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true" style="width: 1rem; height: 1rem; border-width: 0.15em;"></span>
-                        Polling indexer status (roots checking)...
+                        {{ translation.pinsPolling }}
                     </div>
                 </div>
                 <div class="modal-footer border-0 justify-content-center" style="padding-top: 0; display: flex; gap: 10px;">
@@ -346,7 +390,7 @@ defineExpose({
                         style="width: 150px; margin: 0;"
                         @click="retrySyncModalResolution"
                     >
-                        Retry
+                        {{ translation.pinsBtnRetry }}
                     </button>
                     <button
                         type="button"

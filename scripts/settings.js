@@ -292,7 +292,7 @@ export async function setNameResolvingApi(apiUrl, fSilent = false) {
     if (!fSilent)
         createAlert(
             'success',
-            `Switched Name Resolving API to ${apiUrl}`,
+            tr(ALERTS.PINS_SWITCHED_API, [{ apiUrl }]),
             2250
         );
 }
@@ -319,7 +319,7 @@ export async function setEvmNetworkId(networkId, fSilent = false) {
     if (!fSilent) {
         createAlert(
             'success',
-            `Switched EVM network to ${network.name}`,
+            tr(ALERTS.PINS_SWITCHED_EVM, [{ netName: network.name }]),
             2250
         );
     }
@@ -332,7 +332,7 @@ export async function setEvmRpc(rpcUrl, fSilent = false) {
     if (!fSilent) {
         createAlert(
             'success',
-            `Switched EVM RPC to ${rpcUrl}`,
+            tr(ALERTS.PINS_SWITCHED_RPC, [{ rpcUrl }]),
             2250
         );
     }

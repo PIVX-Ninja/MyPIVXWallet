@@ -1,27 +1,3 @@
-# This document is to be used as a template as all the base code is in English
-# Basic HTML tags are allowed such as <b><i> etc. All data is sanitized https://developer.mozilla.org/en-US/docs/Web/API/Element/innerHTML
-
-# When updating the template you must also update the en version. If you don't and a new language with a new setting is used, it
-# will NOT translate back after switching back to en
-
-# How to create a new language:
-#  1) Create a new folder in locale and copy the template, add the locale prefix (en, uwu, etc) to the start of the variable
-#          (var translation -> var en_translation) then edit the template with your new languages words.
-#  2) Go into the i18n.js and find `arrActiveLangs` and add the prefix to that array. ['en'] -> ['en', 'uwu']
-#  3) Go into the i18n.js page and find `translatableLanguages` add your prefix and variable name
-#              var translatableLanguages = {
-#                  "en": en_translation
-#              }
-#        Turns into:
-#              var translatableLanguages = {
-#                  "en": en_translation
-#                  "uwu": uwu_translation
-#              }
-#  4) Submit a push request to the github
-
-# NOTE: If a section does NOT need translating, leave it empty.
-# NOTE: Variables that MPW insert are denoted by brackets {}, for example, {button}, do NOT translate variables, but place them where it makes the most sense.
-
 amount = "Amount"
 staking = "Staking"
 wallet = "Wallet"
@@ -158,7 +134,7 @@ transaction = "A ping indicating a Tx, no unique data is sent, but may be inferr
 ID = "ID"
 time = "Time"
 description = "Description"
-accountDeleted = 'Your account has been successfully deleted!'
+accountDeleted = "Your account has been successfully deleted!"
 activityBlockReward = "Block Reward"
 activitySentTo = "Sent to {r}"
 activitySelf = "self"
@@ -273,7 +249,7 @@ accessPivxLedgerWallet = "Access PIVX Ledger Wallet"
 customWalletName = "Custom wallet name"
 maxEightChars = "(max. 8 characters)"
 importPivxWallet = "Import a PIVX wallet using a Private Key, xpriv, or Seed Phrase."
-seedPhraseXpriv="Seed Phrase, XPriv or WIF Private Key"
+seedPhraseXpriv = "Seed Phrase, XPriv or WIF Private Key"
 createANewPivxWallet = "Create a new PIVX Wallet"
 createANewVanityWallet = "Create a Vanity PIVX Wallet"
 walletsStart = "<b>Note:</b> addresses will always start with:"
@@ -281,7 +257,24 @@ wroteItDown = "Wrote it down"
 stop = "Stop"
 transactionNeedsAddress = "The address field is empty"
 transactionNeedsAmount = "The amount is invalid"
-
+pinsTitleSecurityWarning = "⚠️ Security Warning"
+pinsTextSecurityWarning = "The Name Service indexer returned a state root that has never been registered on the blockchain. Sending funds is blocked for security reasons."
+pinsTitleSynced = "✓ Synced & Resolved"
+pinsTextSynced = "The indexer is synced, ready and the name has been successfully resolved. You are safe to send your funds."
+pinsTitleNotFound = "❌ Domain Not Found"
+pinsTextNotFound = "This domain name does not exist. Please check the spelling."
+pinsTitleSyncDelay = "⚠️ Indexer Sync Delay"
+pinsTextSyncDelayResolved = "The Name Service is currently syncing with the latest state from PIVX blockchain. If the owner changed this domain's target address in the last 10-20 minutes, funds might go to the old address."
+pinsTitleSyncDelayNotFound = "🔍 Indexer Sync Delay"
+pinsTextSyncDelayNotFound = "The Name Service is currently syncing with the latest state from PIVX blockchain, and this domain name was not found. If it was registered very recently, it might be syncing at the moment."
+pinsTitleIndexerError = "⚠️ Indexer Error"
+pinsTextIndexerError = "The Name Service indexer returned an error: {errMsg}"
+pinsPolling = "Polling indexer status (roots checking)..."
+pinsBtnClose = "Close"
+pinsBtnSend = "Send"
+pinsBtnSendAnyway = "Send anyway"
+pinsBtnCancel = "Cancel"
+pinsBtnRetry = "Retry"
 
 [ALERTS]
 INTERNAL_ERROR = "Internal error, please try again later"
@@ -386,11 +379,25 @@ CONFIRM_POPUP_MN_P_KEY = "Your Masternode Private Key"
 CONFIRM_POPUP_MN_P_KEY_HTML = "<br> Save this private key and copy it to your VPS config <br>"
 CONFIRM_POPUP_VERIFY_ADDR = "Verify your address"
 APP_INSTALLED = "App Installed!"
-WALLET_HARDWARE_USB_UNSUPPORTED ="<b>Firefox doesn't support this!</b><br>Unfortunately, Firefox does not support hardware wallets"
-CONFIRM_POPUP_DELETE_ACCOUNT = 'This will delete all your data, including masternodes contacts and private keys!'
-CONFIRM_POPUP_DELETE_ACCOUNT_TITLE = 'Are you sure?'
-CONFIRM_LEDGER_TX = 'Confirm this transaction matches the one on your {hardwareWallet}'
-CONFIRM_LEDGER_TX_OUT = 'You will send {value} {ticker} to <div class="inline-address">{address}</div>'
-LEDGER_TX_TOO_BIG = 'Transaction length exceeds 9000 bytes'
-MISSING_FUNDS = '<b>Balance is too small!</b> <br> Missing {sats} sats!'
+WALLET_HARDWARE_USB_UNSUPPORTED = "<b>Firefox doesn't support this!</b><br>Unfortunately, Firefox does not support hardware wallets"
+CONFIRM_POPUP_DELETE_ACCOUNT = "This will delete all your data, including masternodes contacts and private keys!"
+CONFIRM_POPUP_DELETE_ACCOUNT_TITLE = "Are you sure?"
+CONFIRM_LEDGER_TX = "Confirm this transaction matches the one on your {hardwareWallet}"
+CONFIRM_LEDGER_TX_OUT = "You will send {value} {ticker} to <div class=\"inline-address\">{address}</div>"
+LEDGER_TX_TOO_BIG = "Transaction length exceeds 9000 bytes"
+MISSING_FUNDS = "<b>Balance is too small!</b> <br> Missing {sats} sats!"
 MISSING_SHIELD = "Shield is not enabled in this wallet!"
+PINS_RESOLVING_DOMAIN = "Resolving domain name {strDomain}..."
+PINS_CHECKING_SYNC = "Checking sync status..."
+PINS_SYNCING_WAIT = "Indexer is still syncing, please wait..."
+PINS_SYNC_FAILED = "Failed to check sync status: {errMsg}"
+PINS_RESOLVE_FAILED = "Failed to resolve domain name: {errMsg}"
+PINS_INVALID_FORMAT = "Invalid domain name format. Label must be 1-64 characters, lowercase alphanumeric + hyphens (no leading, trailing, or consecutive), ending with one of: {tlds}"
+PINS_INCOMPLETE_METADATA = "Domain name {strDomain} response metadata is incomplete or invalid."
+PINS_INVALID_PROOF = "Cryptographic verification of the name resolution failed: Merkle proof is invalid."
+PINS_INVALID_SHIELD = "Resolved address is not a valid shield address."
+PINS_NAME_MISMATCH = "Resolved name does not match requested name."
+PINS_NOT_FOUND = "Domain name {strDomain} could not be resolved."
+PINS_SWITCHED_API = "Switched Name Resolving API to {apiUrl}"
+PINS_SWITCHED_EVM = "Switched EVM network to {netName}"
+PINS_SWITCHED_RPC = "Switched EVM RPC to {rpcUrl}"

@@ -141,6 +141,10 @@ stop = "" # Stop
 popupSeedPhraseBadNote = "" # <b>This Seed Phrase appears to be invalid <br> (The checksum doesn't match). <br> It might have a typo, </b> or it could’ve been created in an unusual way. Do you still want to continue?
 transactionNeedsAddress = "" # The address field is empty
 transactionNeedsAmount = "" # The amount is invalid
+settingsNameResolvingApi = "" # Choose a Name Resolving API:
+nameResolving = "" # PIVX Name Resolving
+settingsEvmNetwork = "" # EVM Network:
+settingsEvmRpc = "" # EVM RPC URL:
 
 [ALERTS]
 STAKE_ADDR_SET = "<b>Endereço de Cold Staking definido!</b><br>Ao fazer Stake no futuro este endereço irá ser usado." # <b>Cold Address set!</b><br>Future stakes will use this address.
@@ -163,8 +167,8 @@ CONTACTS_KEY_ALREADY_EXISTS = "<b>O contato já exite porém com um nome differe
 CONTACTS_NOT_A_CONTACT_QR = "Isto não é um código QR de contato!" # This isn't a Contact QR!
 CONTACTS_ADDED = "<b>Novo contato adicionado!</b><br>{strName} foi adicionado, Viva!" # <b>New Contact added!</b><br>{strName} has been added, hurray!
 CONTACTS_YOU_HAVE_NONE = "Você não tem contatos!" # You have no contacts!
-PROMO_NOT_ENOUGH = "Você não tem {ticker} suficiente para criar esse código!" # You don't have enough {ticker} to create that Giftcode!
-PROMO_ALREADY_CREATED = "Você já criou esse código!" # You've already created that Giftcode!
+PROMO_NOT_ENOUGH = "Você não tem {ticker} suficiente para criar esse código!" # You don't have enough {ticker} to create that code!
+PROMO_ALREADY_CREATED = "Você já criou esse código!" # You've already created that code!
 SWITCHED_EXPLORERS = "<b>Explorador trocado!</b><br>Agora será utilizado o {explorerName}" # <b>Switched explorer!</b><br>Now using {explorerName}
 SWITCHED_NODE = "<b>Nó trocado!</b><br>Agora será utilizado o {node}" # <b>Switched node!</b><br>Now using {node}
 SWITCHED_SYNC = "<b>Modo de sincronização alternado!</b><br>Agora sera utilizada a sincronização {sync}" # <b>Switched sync mode!</b><br>Now using {sync} sync

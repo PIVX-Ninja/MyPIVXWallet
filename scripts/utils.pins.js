@@ -147,6 +147,7 @@ export async function fetchIndexerRoot(apiEndpoint) {
 }
 
 export async function verifyRootValidityOnContract(rpcUrl, contractAddress, smtRoot) {
+    if (!smtRoot) return false;
     // 66dd97ab is the selector for rootHistory(bytes32)
     const cleanRoot = smtRoot.replace(/^0x/, '').toLowerCase();
     const payload = {
@@ -188,3 +189,4 @@ export async function verifyRootValidityOnContract(rpcUrl, contractAddress, smtR
     const intResult = BigInt(hexResult);
     return intResult !== 0n;
 }
+
