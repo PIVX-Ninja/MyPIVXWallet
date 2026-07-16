@@ -66,7 +66,7 @@
         "BIP44_TYPE_LEDGER": 1,
         "PROTOCOL_VERSION": 70927,
         "MASTERNODE_PORT": 51474,
-        "SHIELD_PREFIX": "pts",
+        "SHIELD_PREFIX": "ptestsapling",
         "Explorers": [
             { "name": "PIVX-Ninja", "url": "https://explorer.testnet.pivx.ninja" }
         ],
